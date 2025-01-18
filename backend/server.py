@@ -8,7 +8,7 @@ import threading
 app = Flask(__name__)
 
 ## MONGO DB SCAFFOLDING
-MONGO_URI = "mongodb://localhost:27017/" 
+MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" 
 client = MongoClient(MONGO_URI)
 db = client["store_analytics"]
 analytics_collection = db["analytics"]
@@ -122,34 +122,21 @@ def handle_data():
     elif request.method == 'GET':
         return jsonify({"result": "Send some data using POST!"})
 
+# API route to store data from MongoDB
 @app.route('/api/store_data', methods=['POST'])
 def store_data():
-    # replace with actual implemtation
-    # try:
-    #     data = request.json
-    #     if not data:
-    #         return jsonify({"status": "error", "message": "No data received."})
-
-    #     data['timestamp'] = datetime.utcnow().isoformat()
-
-    #     analytics_collection.insert_one(data)
-
-    #     return jsonify({"status": "success", "message": "Data stored in the database."})
-    # except Exception as e:
-    #     return jsonify({"status": "error", "message": str(e)})
+    data = request.json
+    result = analytics_collection.insert_one(data)
     return jsonify({"status": "success", "result": "Data stored in the database."})
 
 # API route to retrieve data from MongoDB
 @app.route('/api/get_data', methods=['GET'])
 def get_data():
-    # replace with actual implementation
-    # try:
-    #     # Fetch all documents from the collection
-    #     data = list(analytics_collection.find({}, {"_id": 0}))  # Exclude MongoDB's _id field from the output
-    #     return jsonify(data)
-    # except Exception as e:
-    #     return jsonify({"status": "error", "message": str(e)})
-    return jsonify({"status": "success", "result": "Data retrieved from the database."})
+    data = collection.find_one({"name": name})
+    if data:
+        return jsonify(data), 200
+    else:
+        return jsonify({"message": "Not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
