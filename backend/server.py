@@ -63,6 +63,7 @@ class VideoStream:
         if not self._is_playing:
             self._is_playing = True
             self._thread = threading.Thread(target=self._play_video)
+            self._thread.daemon = True
             self._thread.start()
     
     def stop_video(self):
@@ -79,8 +80,8 @@ class VideoStream:
         cv2.destroyAllWindows()
 
     def __del__(self):
+        self.stop_video()
         self.release()
-
 
 video = VideoStream("http://128.189.133.125:4747/video")
 video.play_video()
@@ -105,8 +106,8 @@ def get_camera_url():
 def generate_video():
     while True:
         frame = FRAME
-        print(frame)
         if frame is None:
+            print("frame not found")
             continue
 
         _, buffer = cv2.imencode('.jpg', frame)
@@ -139,31 +140,14 @@ def handle_data():
 @app.route('/api/store_data', methods=['POST'])
 def store_data():
     # replace with actual implemtation
-    # try:
-    #     data = request.json
-    #     if not data:
-    #         return jsonify({"status": "error", "message": "No data received."})
-
-    #     data['timestamp'] = datetime.utcnow().isoformat()
-
-    #     analytics_collection.insert_one(data)
-
-    #     return jsonify({"status": "success", "message": "Data stored in the database."})
-    # except Exception as e:
-    #     return jsonify({"status": "error", "message": str(e)})
     return jsonify({"status": "success", "result": "Data stored in the database."})
 
 # API route to retrieve data from MongoDB
 @app.route('/api/get_data', methods=['GET'])
 def get_data():
     # replace with actual implementation
-    # try:
-    #     # Fetch all documents from the collection
-    #     data = list(analytics_collection.find({}, {"_id": 0}))  # Exclude MongoDB's _id field from the output
-    #     return jsonify(data)
-    # except Exception as e:
-    #     return jsonify({"status": "error", "message": str(e)})
     return jsonify({"status": "success", "result": "Data retrieved from the database."})
 
 if __name__ == '__main__':
     app.run(debug=True)
+
