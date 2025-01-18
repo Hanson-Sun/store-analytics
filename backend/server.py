@@ -83,9 +83,6 @@ class VideoStream:
         self.stop_video()
         self.release()
 
-video = VideoStream("http://128.189.133.125:4747/video")
-video.play_video()
-
 @app.route('/set_camera_url', methods=['POST'])
 def set_camera_url():
     global video
@@ -149,5 +146,7 @@ def get_data():
     return jsonify({"status": "success", "result": "Data retrieved from the database."})
 
 if __name__ == '__main__':
+    video = VideoStream("http://128.189.133.125:4747/video")
+    video.play_video()
     app.run(debug=True)
 
