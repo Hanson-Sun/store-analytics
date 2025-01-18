@@ -1,3 +1,5 @@
+
+ultralytics
 flask
 pymongo
 opencv-python
