@@ -1,0 +1,9 @@
+.title {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    height: 0vh;
+}
+body {
+    height: 100vh;
+}

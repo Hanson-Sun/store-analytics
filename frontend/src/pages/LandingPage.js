@@ -1,8 +1,14 @@
+import "./LandingPage.css";
+import { Button, Flex } from 'antd';
+
 function LandingPage() {
   return (
-   <div>
-        STORE ANALYTICS LANDING PAGE
-   </div>
+   <Flex vertical gap="middle" justify="center" align="center" classname = "landingpage">
+        <div classname = "Title">
+            STORE ANALYTICS 
+        </div>
+        <Button size = "large" type="primary" href="/homepage">Get Started</Button>    
+   </Flex>
   );
 }
 
