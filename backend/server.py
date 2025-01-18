@@ -15,15 +15,16 @@ analytics_collection = db["analytics"]
 
 # TODO
 class AIVisionDetector:
-    self.video_stream = None
-    self.detector = None
+    def __init__(self):
+        self.video_stream = None
+        self.detector = None
 
 
 class VideoVisualizer:
     def __init__(self):
         self.video_stream = None
 
-
+FRAME = None
 
 class VideoStream:
     def __init__(self, url):
@@ -31,24 +32,32 @@ class VideoStream:
         self._thread = None
         self._url = url
         self._cap = cv2.VideoCapture(url)
+        self._lock = threading.Lock()
+        self._current_frame = None
     
     def get_frame(self):
-        ret, frame = self._cap.read()
-        if not ret:
-            print("Error: Could not read frame.")
-            return None
-        return frame
+        global FRAME
+        with self._lock:
+            if not self._cap.isOpened():
+                print("Error: VideoCapture is not opened.")
+                return None
+            ret, frame = self._cap.read()
+            self._current_frame = frame
+            FRAME = frame
+            if not ret:
+                print("Error: Could not get frame!!")
+                return None
+            return frame
     
     def _play_video(self):
-            while self._is_playing:
-                frame = self.get_frame()
-                if frame is None:
-                    break
-                cv2.imshow('Camera Feed', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    self.stop_video()
-                    break
-            self.release()
+        while self._is_playing:
+            frame = self.get_frame()
+            if frame is None:
+                break
+            cv2.imshow('Camera Feed', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                self._is_playing = False
+                break
 
     def play_video(self):
         if not self._is_playing:
@@ -74,41 +83,46 @@ class VideoStream:
 
 
 video = VideoStream("http://128.189.133.125:4747/video")
+video.play_video()
+
+@app.route('/set_camera_url', methods=['POST'])
+def set_camera_url():
+    global video
+    data = request.json
+    if not data:
+        return jsonify({"status": "error", "result": "No data received."})
+    url = data.get("url")
+    if not url:
+        return jsonify({"status": "error", "result": "No URL provided."})
+    video.set_url(url)
+    return jsonify({"status": "success", "result": "Camera URL updated."})
+
+
+@app.route('/get_camera_url', methods=['GET'])
+def get_camera_url():
+    return jsonify({"result": video._url})
 
 def generate_video():
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+        frame = FRAME
+        print(frame)
+        if frame is None:
+            continue
 
-        cv2.imshow('frame', frame)
-        
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
+
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_video(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def generate_heatmap():
     global heatmap_accumulator
     # while True:
     #     # okay actually do something here
-
-@app.route('/set_camera_url', methods=['POST'])
-def set_camera_url():
-    global VIDEO_STREAM_URL
-    global cap
-    data = request.json
-    VIDEO_STREAM_URL = data['camera_url']
-    cap = cv2.VideoCapture(VIDEO_STREAM_URL)
-    return jsonify({"status": "success", "result": "Camera URL updated."})
-
-@app.route('/get_camera_url', methods=['GET'])
-def get_camera_url():
-    return jsonify({"result": VIDEO_STREAM_URL})
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_video(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/heatmap_feed')
 def heatmap_feed():
