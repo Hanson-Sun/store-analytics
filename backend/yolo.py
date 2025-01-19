@@ -10,7 +10,7 @@ class AIVisionDetector:
 
     def __init__(self):
         self.colors = {}
-        self.THRESHOLD = 0.7
+        self.THRESHOLD = 0.4
 
     def detect(self, frame) -> tuple:
         timestamp = time.time()
@@ -25,6 +25,8 @@ class AIVisionDetector:
 
             xmin, ymin, xmax, ymax = int(data[0]), int(data[1]), int(data[2]), int(data[3])
             class_id = int(data[5])
+            if class_id != 0:
+                continue
             bbox = [xmin, ymin, xmax - xmin, ymax - ymin]
             frame_data.append([bbox, confidence, class_id])
 
