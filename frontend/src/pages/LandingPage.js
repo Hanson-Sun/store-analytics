@@ -12,24 +12,25 @@ function LandingPage() {
   const navigate = useNavigate();
 
   const handleGetStarted = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/set_camera_url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: cameraUrl }),
-      });
+    // try {
+    //   const response = await fetch('http://localhost:5000/set_camera_url', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ url: cameraUrl }),
+    //   });
 
-      const result = await response.json();
-      if (result.status === "success") {
-        navigate("/homepage");
-      } else {
-        alert(result.result);
-      }
-    } catch (error) {
-      console.error("Error setting camera URL:", error);
-    }
+    //   const result = await response.json();
+    //   if (result.status === "success") {
+    //     navigate("/homepage");
+    //   } else {
+    //     alert(result.result);
+    //   }
+    // } catch (error) {
+    //   console.error("Error setting camera URL:", error);
+    // }
+    navigate("/homepage");
   };
   
   return (

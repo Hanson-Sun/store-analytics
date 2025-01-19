@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import HeatmapExample from './HeatMapG';
 
 const VideoFeed = () => {
   const [isPlaying, setIsPlaying] = useState(true);
@@ -11,11 +12,15 @@ const VideoFeed = () => {
     <div style={{ textAlign: 'center' }}>
       <h1>Live Video Feed</h1>
       {isPlaying ? (
-        <img
-          src="http://localhost:5000/video_feed"
-          alt="Live Video Feed"
-          style={{ width: '100%', maxWidth: '800px', border: '2px solid #ccc' }}
-        />
+        <div className="overlay">
+          <HeatmapExample className="foreground" />
+          <img className="background"
+            src="http://localhost:8000/video_feed"
+            alt="Live Video Feed"
+            style={{ width: '100%', maxWidth: '800px', border: '2px solid #ccc' }}
+          />
+        </div>
+
       ) : (
         <p>Video feed paused.</p>
       )}

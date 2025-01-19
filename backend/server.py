@@ -331,5 +331,5 @@ if __name__ == '__main__':
     video = VideoStream("http://10.43.245.35:4747/video")
     video.play_video()
 
-    app.run(debug=False)
+    app.run(port = 8000, debug=False)
 
