@@ -13,7 +13,7 @@ function LandingPage() {
 
   const handleGetStarted = async () => {
     try {
-      const response = await fetch('/set_camera_url', {
+      const response = await fetch('http://localhost:5000/set_camera_url', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
