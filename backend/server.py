@@ -60,7 +60,7 @@ class VideoStream:
             frame = self.get_frame()
             if frame is None:
                 break
-            cv2.imshow('Camera Feed', frame)
+            # cv2.imshow('Camera Feed', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 self._is_playing = False
                 break

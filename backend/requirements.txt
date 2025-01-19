@@ -6,4 +6,5 @@ pymongo
 opencv-python
 numpy
 scikit-learn
+deep_sort_realtime
     
