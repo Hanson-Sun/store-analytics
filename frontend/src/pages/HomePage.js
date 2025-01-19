@@ -75,21 +75,21 @@ function HomePage() {
                     </Col>
                 </Row>
 
-                <Row gutter={[16, 16]} style={{ marginTop: '20px', justifyContent: 'center' }}>
-                        <Col span={24} style={{ marginTop: '20px', justifyContent: 'center' }}>
-                        <Card title="Mean Heatmap" bordered={false} style={{ marginTop: '20px', justifyContent: 'center' }}>
+                <Row gutter={[16, 16]} style={{ marginTop: '20px' }} justify="center">
+                    {/* Mean Heatmap */}
+                    <Col xs={24} md={12}>
+                        <Card title="Mean Heatmap" bordered={false}>
                             <HeatmapExample />
                         </Card>
                     </Col>
-                </Row>
 
-                <Row gutter={[16, 16]} style={{ marginTop: '20px' }}>
-                    <Col span={24}>
+                    {/* Average Store Traffic Over Time */}
+                    <Col xs={24} md={12}>
                         <Card title="Average Store Traffic Over Time" bordered={false}>
                             <BarChartCustomers />
                         </Card>
                     </Col>
-                </Row>
+            </Row>
             </Content>
         </Layout>
     );
