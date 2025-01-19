@@ -28,7 +28,7 @@ function HomePage() {
             const startTime = new Date(Date.now() - 2000).toISOString(); // 2 seconds ago
     
             const response = await fetch(
-              `http://localhost:5000/api/count_unique_objects?start_time=${startTime}&end_time=${endTime}`
+              `http://localhost:8000/api/count_unique_objects?start_time=${startTime}&end_time=${endTime}`
             );
             if (!response.ok) {
               throw new Error(`API error: ${response.status}`);
