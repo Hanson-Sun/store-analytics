@@ -7,54 +7,71 @@ from datetime import datetime, timezone, timedelta
 import threading
 from yolo import AIVisionDetector
 from scipy.spatial import KDTree
+from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app)
 
 ## MONGO DB SCAFFOLDING
-# MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" 
+# MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 MONGO_URI = "mongodb+srv://user:user@nwhacks2025.5wysc.mongodb.net/?retryWrites=true&w=majority&appName=nwhacks2025"
 client = MongoClient(MONGO_URI)
 db = client["store-analytics"]
 analytics_collection = db["test1"]
 
 # TODO
-
 FRAME = None
 
 class VideoStream:
     def __init__(self, url):
-        self._is_playing = False
-        self._thread = None
         self._url = url
-        self._cap = cv2.VideoCapture(url)
+        self._cap = None
         self._lock = threading.Lock()
         self._current_frame = None
-        self._detector = AIVisionDetector()
-        self._data = None
-    
-    def get_frame(self):
+        self._is_running = False
+        self._detector = AIVisionDetector()  # Replace with your actual detector class
+
+    def start(self):
+        """Start the video processing thread."""
+        self._is_running = True
+        self._thread = threading.Thread(target=self._update, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        """Stop the video processing thread."""
+        self._is_running = False
+        if self._cap.isOpened():
+            self._cap.release()
+        self._thread.join()
+
+    def _update(self):
+        """Continuously read frames from the video source."""
         global FRAME
+        while self._is_running:
+            with self._lock:
+                if self._cap is None or not self._cap.isOpened():
+                    print("Error: VideoCapture is not opened.")
+                    self._is_running = False
+                    break
+                ret, frame = self._cap.read()
+                if not ret:
+                    print("Error: Could not read frame.")
+                    self._is_running = False
+                    break
+                FRAME = frame
+
+    def get_frame(self):
+        """Get the most recent frame."""
         with self._lock:
-            if not self._cap.isOpened():
-                print("Error: VideoCapture is not opened.")
-                return None
-            ret, frame = self._cap.read()
-            self._current_frame = frame
-            FRAME = frame
-            if not ret:
-                print("Error: Could not get frame!!")
-                return None
-            return frame
-        
+            return self._current_frame
+
     def process_frame(self, frame):
+        """Process the frame using the detector."""
         data = self._detector.detect(frame)
         detections = self._detector.track(frame, data[0])
-
         frame_data, centroids, timestamp = self._detector.process_data((detections, data[1]))
-
         return frame_data, centroids, timestamp
-    
+
     def _play_video(self):
         while self._is_playing:
             frame = self.get_frame()
@@ -71,37 +88,36 @@ class VideoStream:
             self._thread = threading.Thread(target=self._play_video)
             self._thread.daemon = True
             self._thread.start()
-    
+
     def stop_video(self):
         self._is_playing = False
         if self._thread is not None:
             self._thread.join()
 
     def set_url(self, url):
-        self._url = url
-        self._cap = cv2.VideoCapture(url)
-
-        print(f"URL SET TO {url}")
-
-    def release(self):
-        self._cap.release()
-        cv2.destroyAllWindows()
+        """Set the URL of the video stream."""
+        with self._lock:
+            self._url = url
+            if self._cap is not None:
+                self._cap.release()  # Release the previous capture if any
+            self._cap = cv2.VideoCapture(url)
+            print(f"Camera URL set to {url}")
 
     def __del__(self):
-        self.stop_video()
-        self.release()
+        self.stop()
 
 @app.route('/set_camera_url', methods=['POST'])
 def set_camera_url():
     global video
     data = request.json
     if not data:
-        return jsonify({"status": "error", "result": "No data received."})
+        return jsonify({"status": "error", "result": "No data received."}), 400
     url = data.get("url")
     if not url:
-        return jsonify({"status": "error", "result": "No URL provided."})
+        return jsonify({"status": "error", "result": "No URL provided."}), 400
     video.set_url(url)
-    return jsonify({"status": "success", "result": "Camera URL updated."})
+    video.start()
+    return jsonify({"status": "success", "result": "Camera URL updated and stream started."})
 
 
 @app.route('/get_camera_url', methods=['GET'])
@@ -109,6 +125,7 @@ def get_camera_url():
     return jsonify({"result": video._url})
 
 def generate_video():
+    global FRAME
     while True:
         frame = FRAME
         if frame is None:
@@ -160,7 +177,7 @@ def insert_data(frame_data, centroids, timestamp):
             "coordinates": centroid,
             "box": box
         })
-    
+
     result = analytics_collection.insert_many(data_list)
     return result
 
@@ -208,7 +225,7 @@ def get_heatmap_data():
 
     coordinates = [entry['coordinates'] for entry in data]
     if not coordinates:
-        return jsonify([]) 
+        return jsonify([])
 
     tree = KDTree(coordinates)
 
@@ -317,19 +334,26 @@ def unique_objects_per_hour():
         }
     })
 
-    hourly_counts = defaultdict(set)
-    for entry in data:
-        hour = entry['time'].hour
-        obj_id = entry['obj_id']
-        hourly_counts[hour].add(obj_id)
+    # Initialize a dictionary for all 24 hours with default counts of 0
+    hourly_counts = {f"{hour:02d}:00": 0 for hour in range(24)}
 
-    hourly_counts = {hour: len(obj_ids) for hour, obj_ids in hourly_counts.items()}
+    # Count unique objects per hour
+    temp_counts = defaultdict(set)  # Temporarily store unique object IDs per hour
+    for entry in data:
+        entry_time = entry['time'].astimezone(timezone.utc)  # Ensure the time is in UTC
+        hour_label = entry_time.strftime("%H:00")
+        obj_id = entry['obj_id']
+        temp_counts[hour_label].add(obj_id)
+
+    # Convert unique object sets to counts
+    for hour_label, obj_ids in temp_counts.items():
+        hourly_counts[hour_label] = len(obj_ids)
+
     return jsonify(hourly_counts)
 
 
 if __name__ == '__main__':
     video = VideoStream("http://10.43.245.35:4747/video")
-    video.play_video()
+    video.start()
 
     app.run(port = 8000, debug=False)
-
