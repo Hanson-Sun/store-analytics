@@ -1,32 +1,27 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 
 const VideoFeed = () => {
-  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(true);
 
-  useEffect(() => {
-    const fetchVideo = async () => {
-      const response = await fetch('/video_feed');
-      const video = videoRef.current;
-      if (video) {
-        video.src = URL.createObjectURL(await response.blob());
-        video.play();
-      }
-    };
-
-    fetchVideo();
-
-    return () => {
-      const video = videoRef.current;
-      if (video) {
-        video.pause();
-        video.src = '';
-      }
-    };
-  }, []);
+  const toggleFeed = () => {
+    setIsPlaying(!isPlaying);
+  };
 
   return (
-    <div>
-      <video ref={videoRef} controls autoPlay />
+    <div style={{ textAlign: 'center' }}>
+      <h1>Live Video Feed</h1>
+      {isPlaying ? (
+        <img
+          src="http://localhost:5000/video_feed"
+          alt="Live Video Feed"
+          style={{ width: '100%', maxWidth: '800px', border: '2px solid #ccc' }}
+        />
+      ) : (
+        <p>Video feed paused.</p>
+      )}
+      <button onClick={toggleFeed} style={{ marginTop: '10px' }}>
+        {isPlaying ? 'Pause Feed' : 'Resume Feed'}
+      </button>
     </div>
   );
 };
