@@ -1,7 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import heatmap from "heatmap.js"; // Import heatmap.js
-import Image from "./image.png"; 
-import VideoFeed from "./VideoFeed";
 
 const HeatmapExample = () => {
   const heatmapRef = useRef(null);
@@ -10,34 +8,47 @@ const HeatmapExample = () => {
     // Create heatmap instance with minimal configuration
     const heatmapInstance = heatmap.create({
       container: heatmapRef.current, // Reference to the container div
+      radius: 50, // Optional: Adjust radius size for the heatmap
     });
 
-    // Generate random data for heatmap
-    const points = [];
-    let max = 0;
-    const width = 840;
-    const height = 400;
-    const len = 200;
+    const fetchHeatmapData = async () => {
+      try {
+        const startTime = new Date(Date.now() - 300 * 60 * 1000).toISOString(); // Last 2 minutes
+        const endTime = new Date().toISOString(); // Current time
+        const radius = 10;
 
-    for (let i = 0; i < len; i++) {
-      const val = Math.floor(Math.random() * 100); // Random intensity value
-      max = Math.max(max, val); // Update the maximum intensity
-      const point = {
-        x: Math.floor(Math.random() * width), // Random x coordinate
-        y: Math.floor(Math.random() * height), // Random y coordinate
-        value: val, // Random intensity value
-      };
-      points.push(point);
-    }
+        const response = await fetch(
+          `http://localhost:8000/api/get_heatmap_data?start_time=${encodeURIComponent(startTime)}&end_time=${encodeURIComponent(endTime)}&radius=${radius}`
+        );
 
-    // Set data for the heatmap
-    const data = {
-      max: max,
-      data: points,
+        if (!response.ok) {
+          throw new Error(`Failed to fetch heatmap data: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched Heatmap Data:", data);
+
+        if (data.length > 0) {
+          const maxIntensity = Math.max(...data.map((point) => point.intensity));
+
+          // Set data for the heatmap
+          const heatmapData = {
+            max: maxIntensity,
+            data: data.map((point) => ({
+              x: point.x, // Use x-coordinate from API data
+              y: point.y, // Use y-coordinate from API data
+              value: point.intensity, // Use intensity from API data
+            })),
+          };
+
+          heatmapInstance.setData(heatmapData); // Initialize the heatmap with API data
+        }
+      } catch (error) {
+        console.error("Error fetching heatmap data:", error);
+      }
     };
 
-    // Initialize the heatmap with the data
-    heatmapInstance.setData(data);
+    fetchHeatmapData();
 
     // Cleanup heatmap instance on unmount
     return () => {

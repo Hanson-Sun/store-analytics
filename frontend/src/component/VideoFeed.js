@@ -13,7 +13,6 @@ const VideoFeed = () => {
       <h1>Live Video Feed</h1>
       {isPlaying ? (
         <div className="overlay">
-          <HeatmapExample className="foreground" />
           <img className="background"
             src="http://localhost:8000/video_feed"
             alt="Live Video Feed"

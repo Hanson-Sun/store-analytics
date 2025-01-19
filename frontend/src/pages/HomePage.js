@@ -57,7 +57,8 @@ function HomePage() {
             <Content style={{ padding: '20px' }}>
                 <Title level={2}>Store Analytics Dashboard</Title>
 
-                <Row gutter={16}>
+                <Row gutter={8}>
+            <Col span = {16}>
                     <Col span={8}>
                         <Card title="Live Feed" bordered={false}>
                             <div>
@@ -65,12 +66,6 @@ function HomePage() {
                             </div>
                         </Card>
                     </Col>
-
-                    {/* <Col span={8}>
-                        <Card title="Mean Heatmap" bordered={false}>
-                            <HeatmapExample />
-                        </Card>
-                    </Col> */}
 
                     <Col span={8}>
                         <Card title="Number of People in Store" bordered={false}>
@@ -82,6 +77,15 @@ function HomePage() {
                             </Row>
                         </Card>
                     </Col>
+                    </Col>
+
+                    <Col span={8}>
+                        <Card title="Mean Heatmap" bordered={false}>
+                            <HeatmapExample />
+                        </Card>
+                    </Col>
+
+                    
                 </Row>
 
                 <Row style={{ marginTop: '20px' }} gutter={16}>
