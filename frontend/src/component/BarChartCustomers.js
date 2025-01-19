@@ -1,29 +1,50 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, { useEffect, useState } from 'react';
+import { Card, Col, Row } from 'antd';
 
-// Example data with time (you can use actual time data or timestamps)
-const data = [
-  { time: '10:00 AM', customers: 50 },
-  { time: '11:00 AM', customers: 65 },
-  { time: '12:00 PM', customers: 80 },
-  { time: '01:00 PM', customers: 120 },
-  { time: '02:00 PM', customers: 140 },
-  { time: '03:00 PM', customers: 100 },
-  { time: '04:00 PM', customers: 90 },
-];
 
 const BarChartCustomers = () => {
+
+  const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const response = await fetch('http://localhost:8000/api/unique_objects_per_hour');
+          if (response.ok) {
+            const result = await response.json();
+            setData(result);
+          } else {
+            console.error('Error fetching data:', response.statusText);
+          }
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, []);
+
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="time" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="customers" fill="#8884d8" />
-      </BarChart>
-    </ResponsiveContainer>
+    <Row>
+      <Col span={24}>
+        <Card title="Unique Objects Per Hour" bordered={false} loading={loading}>
+          {Object.keys(data).length > 0 ? (
+            <ul>
+              {Object.entries(data).map(([hour, count]) => (
+                <li key={hour}>
+                  Hour {hour}: {count} unique objects
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No data available</p>
+          )}
+        </Card>
+      </Col>
+    </Row>
   );
 };
 

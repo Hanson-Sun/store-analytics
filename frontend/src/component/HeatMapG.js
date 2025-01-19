@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import heatmap from "heatmap.js"; // Import heatmap.js
 import Image from "./image.png"; 
+import VideoFeed from "./VideoFeed";
 
 const HeatmapExample = () => {
   const heatmapRef = useRef(null);
@@ -58,7 +59,6 @@ const HeatmapExample = () => {
         border: "1px solid #ccc", // Optional border
       }}
     >
-      <img src={Image} alt="Store Layout" style={{ width: "100%", height: "100%", opacity: 1, position: "absolute", top: 0, left: 0 }} />
     </div>
   );
 };

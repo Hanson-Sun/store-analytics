@@ -5,17 +5,10 @@ import { Layout, Typography, Card, Progress, Row, Col, Statistic, Input } from '
 import VideoFeed from "../component/VideoFeed"
 import BarChartCustomers from '../component/BarChartCustomers';
 import HeatmapExample from '../component/HeatMapG';
+import { Heatmap } from "heatmap.js";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
-
-const xLabels = new Array(24).fill(0).map((_, i) => `${i}`)
-const yLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const data = new Array(yLabels.length)
-    .fill(0)
-    .map(() =>
-        new Array(xLabels.length).fill(0).map(() => Math.floor(Math.random() * 50 + 50))
-    )
 
 function HomePage() {
     const [currentPeopleCount, setCurrentPeopleCount] = useState(0);
@@ -67,15 +60,17 @@ function HomePage() {
                 <Row gutter={16}>
                     <Col span={8}>
                         <Card title="Live Feed" bordered={false}>
+                            <div>
                             <VideoFeed />
+                            </div>
                         </Card>
                     </Col>
 
-                    <Col span={8}>
+                    {/* <Col span={8}>
                         <Card title="Mean Heatmap" bordered={false}>
                             <HeatmapExample />
                         </Card>
-                    </Col>
+                    </Col> */}
 
                     <Col span={8}>
                         <Card title="Number of People in Store" bordered={false}>

@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app)
 
 ## MONGO DB SCAFFOLDING
-# MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" 
+# MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 MONGO_URI = "mongodb+srv://user:user@nwhacks2025.5wysc.mongodb.net/?retryWrites=true&w=majority&appName=nwhacks2025"
 client = MongoClient(MONGO_URI)
 db = client["store-analytics"]
@@ -71,6 +71,28 @@ class VideoStream:
         detections = self._detector.track(frame, data[0])
         frame_data, centroids, timestamp = self._detector.process_data((detections, data[1]))
         return frame_data, centroids, timestamp
+
+    def _play_video(self):
+        while self._is_playing:
+            frame = self.get_frame()
+            if frame is None:
+                break
+            # cv2.imshow('Camera Feed', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                self._is_playing = False
+                break
+
+    def play_video(self):
+        if not self._is_playing:
+            self._is_playing = True
+            self._thread = threading.Thread(target=self._play_video)
+            self._thread.daemon = True
+            self._thread.start()
+
+    def stop_video(self):
+        self._is_playing = False
+        if self._thread is not None:
+            self._thread.join()
 
     def set_url(self, url):
         """Set the URL of the video stream."""
@@ -155,7 +177,7 @@ def insert_data(frame_data, centroids, timestamp):
             "coordinates": centroid,
             "box": box
         })
-    
+
     result = analytics_collection.insert_many(data_list)
     return result
 
@@ -207,7 +229,7 @@ def get_heatmap_data():
 
     coordinates = [entry['coordinates'] for entry in data]
     if not coordinates:
-        return jsonify([]) 
+        return jsonify([])
 
     tree = KDTree(coordinates)
 
@@ -349,10 +371,4 @@ if __name__ == '__main__':
     video = VideoStream("http://10.43.245.35:4747/video")
     video.start()
 
-    try:
-        app.run(debug=False, use_reloader=False) 
-    except KeyboardInterrupt:
-        print("Shutting down...")
-    finally:
-        video.stop()
-
+    app.run(port = 8000, debug=False)
