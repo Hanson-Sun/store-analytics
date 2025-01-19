@@ -50,12 +50,11 @@ function HomePage() {
         <Layout style={{ minHeight: '100vh', maxHeight: "100vh" }}>
             <Header style={{ background: '#001529', padding: 0, margins: 10 }}>
                 <div style={{ color: 'white', textAlign: 'center', fontSize: '40px'}}>
-                    STORE ANALYTICS
+                Store Analytics Dashboard
                 </div>
             </Header>
 
             <Content style={{ padding: '20px' }}>
-                <Title level={2}>Store Analytics Dashboard</Title>
 
                 <Row gutter={8}>
             <Col span = {16}>
