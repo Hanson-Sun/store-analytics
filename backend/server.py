@@ -1,4 +1,5 @@
 from flask import Flask, Response, jsonify, request
+from flask_cors import CORS
 import cv2
 import numpy as np
 from pymongo import MongoClient
@@ -7,6 +8,7 @@ import threading
 from yolo import AIVisionDetector
 
 app = Flask(__name__)
+CORS(app)
 
 ## MONGO DB SCAFFOLDING
 MONGO_URI = "mongodb://localhost:27017/" 
@@ -67,6 +69,14 @@ class VideoStream:
     def set_url(self, url):
         self._url = url
         self._cap = cv2.VideoCapture(url)
+
+        print(f"URL SET TO {url}")
+
+        # if self._thread is not None:
+        #     self._thread.join()
+        
+        # self.stop_video()
+        # self.play_video()
 
     def release(self):
         self._cap.release()
