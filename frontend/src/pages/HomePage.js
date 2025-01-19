@@ -1,6 +1,6 @@
 import "./HomePage.css"
 import { Button, Flex } from 'antd';
-import React from 'react';
+import React, {useState} from 'react';
 import { Layout, Typography, Card, Progress, Row, Col, Statistic } from 'antd';
 import { LineChartOutlined, HeatMapOutlined } from '@ant-design/icons';
 import VideoFeed from "../component/VideoFeed"
@@ -12,10 +12,18 @@ const { Title, Text } = Typography;
 function HomePage() {
 
     const currentPeopleCount = 50;
+    let time = new Date().toLocaleTimeString()
+
+    const [ctime, setTime] = useState(time)
+    const UpdateTime = () => {
+        time = new Date().toLocaleTimeString()
+        setTime(time)
+    }
+    setInterval(UpdateTime)
 
     return (
-        <Layout style={{ minHeight: '100vh', maxHeight: "100vh"}}>
-            <Header style={{ background: '#001529', padding: 0, margins: 10}}>
+        <Layout style={{ minHeight: '100vh', maxHeight: "100vh" }}>
+            <Header style={{ background: '#001529', padding: 0, margins: 10 }}>
                 <div style={{ color: 'white', textAlign: 'center', fontSize: '40px', padding: '10px' }}>
                     STORE ANALYTICS
                 </div>
@@ -43,6 +51,7 @@ function HomePage() {
                             <Row gutter={16}>
                                 <Col span={12}>
                                     <Statistic title="People Count" value={currentPeopleCount} />
+                                    <Statistic title="Time" value={ctime} />
                                 </Col>
                             </Row>
                         </Card>
@@ -52,7 +61,6 @@ function HomePage() {
                 <Row style={{ marginTop: '20px' }} gutter={16}>
                     <Col span={24}>
                         <Card title="Average Store Traffic Over Time" bordered={false}>
-                            <LineChartOutlined style={{ fontSize: '40px', color: '#1890ff' }} />
                             <div>
                                 <BarChartCustomers />
                             </div>
