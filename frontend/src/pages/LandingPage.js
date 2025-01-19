@@ -1,14 +1,26 @@
+import React from "react";
+import { Button, Typography, Layout, Flex } from "antd";
 import "./LandingPage.css";
-import { Button, Flex } from 'antd';
+
+const { Title } = Typography;
+const { Content } = Layout;
 
 function LandingPage() {
   return (
-   <Flex vertical gap="middle" justify="center" align="center" classname = "landingpage">
-        <div classname = "Title">
-            STORE ANALYTICS 
+    <Layout className="landingpage">
+      <Content>
+        <div className="content-wrapper">
+          <Flex vertical gap = "middle" direction="column" justify="center" align="center">
+          <Title level={1} className="title" style={{ color: "white", padding: "10vh"}}>
+            STORE ANALYTICS
+          </Title>
+          <Button size="large" type="primary" href="/homepage" className="get-started-button">
+            Get Started
+          </Button>
+          </Flex>
         </div>
-        <Button size = "large" type="primary" href="/homepage">Get Started</Button>    
-   </Flex>
+      </Content>
+    </Layout>
   );
 }
 

@@ -14,7 +14,7 @@ function HomePage() {
     const currentPeopleCount = 50;
 
     return (
-        <Layout style={{ minHeight: '100vh' }}>
+        <Layout style={{ minHeight: '100vh', maxHeight: "100vh"}}>
             <Header style={{ background: '#001529', padding: 0, margins: 10}}>
                 <div style={{ color: 'white', textAlign: 'center', fontSize: '40px', padding: '10px' }}>
                     STORE ANALYTICS
@@ -27,7 +27,7 @@ function HomePage() {
                 <Row gutter={16}>
                     <Col span={8}>
                         <Card title="Live Feed" bordered={false}>
-                            <VideoFeed />
+                            {/* <VideoFeed /> */}
                         </Card>
                     </Col>
 
