@@ -3,18 +3,20 @@ from flask_cors import CORS
 import cv2
 import numpy as np
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import threading
 from yolo import AIVisionDetector
+from scipy.spatial import KDTree
 
 app = Flask(__name__)
 CORS(app)
 
 ## MONGO DB SCAFFOLDING
-MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" 
+# MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" 
+MONGO_URI = "mongodb+srv://user:user@nwhacks2025.5wysc.mongodb.net/?retryWrites=true&w=majority&appName=nwhacks2025"
 client = MongoClient(MONGO_URI)
-db = client["store_analytics"]
-analytics_collection = db["analytics"]
+db = client["store-analytics"]
+analytics_collection = db["test1"]
 
 # TODO
 
@@ -116,8 +118,8 @@ def generate_video():
         frame_data, centroids, timestamp = video.process_frame(frame)
         frame = video._detector.draw_boxes(frame, frame_data)
 
-        # if len(centroids) > 0 and datetime.now().second % 1 == 0:
-        #     insert_data(frame_data, centroids, timestamp)
+        if len(centroids) > 0 and datetime.now().second % 1 == 0:
+            insert_data(frame_data, centroids, timestamp)
 
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
@@ -128,15 +130,6 @@ def generate_video():
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_video(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-def generate_heatmap():
-    global heatmap_accumulator
-    # while True:
-    #     # okay actually do something here
-
-@app.route('/heatmap_feed')
-def heatmap_feed():
-    return Response(generate_heatmap(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/api/data', methods=['GET', 'POST'])
 def handle_data():
@@ -155,12 +148,17 @@ def store_data():
 
 def insert_data(frame_data, centroids, timestamp):
     data_list = []
+    utc_time = datetime.fromtimestamp(timestamp, tz=timezone.utc)
     for centroid, data in zip(centroids, frame_data):
+        box = [int(coord) for coord in data['box']]
+        obj_id = int(data['id'])
+        centroid = [float(coord) for coord in centroid]
+
         data_list.append({
-            "timestamp": timestamp,
+            "time": utc_time,
+            "obj_id": obj_id,
             "coordinates": centroid,
-            "box": data['box'],
-            "id": data['id']
+            "box": box
         })
     
     result = analytics_collection.insert_many(data_list)
@@ -174,6 +172,160 @@ def get_data():
         return jsonify(data), 200
     else:
         return jsonify({"message": "Not found"}), 404
+
+@app.route('/api/get_dimensions', methods=['GET'])
+def get_dimensions():
+    # get dimensions of the video feed
+    if FRAME is None:
+        return jsonify({"height": 480, "width": 640})
+    height, width, _ = FRAME.shape
+    return jsonify({"height": height, "width": width})
+
+@app.route('/api/get_heatmap_data', methods=['GET'])
+def get_heatmap_data():
+    # Get the start and end times specified by the user
+    start_time_str = request.args.get('start_time')
+    end_time_str = request.args.get('end_time')
+
+    # Convert the start and end times to datetime objects
+    if start_time_str and float(start_time_str) >= 0:
+        start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
+    else:
+        start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
+
+    if end_time_str and float(end_time_str) >= 0:
+        end_time = datetime.fromisoformat(end_time_str).replace(tzinfo=timezone.utc)
+    else:
+        end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+
+    # Retrieve all data from the database within the specified time range
+    data = analytics_collection.find({
+        "time": {
+            "$gte": start_time,
+            "$lte": end_time
+        }
+    })
+
+    coordinates = [entry['coordinates'] for entry in data]
+    if not coordinates:
+        return jsonify([]) 
+
+    tree = KDTree(coordinates)
+
+    radius = float(request.args.get('radius', 10))
+
+    heatmap_data = []
+    max_intensity = 0
+    for coord in coordinates:
+        indices = tree.query_ball_point(coord, radius)
+        intensity = len(indices)
+        max_intensity = max(max_intensity, intensity)
+        heatmap_data.append({
+            "x": coord[0],
+            "y": coord[1],
+            "intensity": intensity
+        })
+
+    for point in heatmap_data:
+        point['intensity'] = (point['intensity'] / max_intensity) * 100
+
+    return jsonify(heatmap_data)
+
+@app.route('/api/count_unique_objects', methods=['GET'])
+def count_unique_objects():
+    start_time_str = request.args.get('start_time')
+    end_time_str = request.args.get('end_time')
+
+    # Convert the start and end times to datetime objects
+    if start_time_str and float(start_time_str) >= 0:
+        start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
+    else:
+        start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
+
+    if end_time_str and float(end_time_str) >= 0:
+        end_time = datetime.fromisoformat(end_time_str).replace(tzinfo=timezone.utc)
+    else:
+        end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+
+    data = analytics_collection.find({
+        "time": {
+            "$gte": start_time,
+            "$lte": end_time
+        }
+    })
+
+    unique_obj_ids = set(entry['obj_id'] for entry in data)
+
+    return jsonify({"result": len(unique_obj_ids)})
+
+@app.route('/api/get_object_paths', methods=['GET'])
+def get_object_paths():
+    # Get the start and end times specified by the user
+    start_time_str = request.args.get('start_time')
+    end_time_str = request.args.get('end_time')
+
+    # Convert the start and end times to datetime objects
+    if start_time_str and float(start_time_str) >= 0:
+        start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
+    else:
+        start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
+
+    if end_time_str and float(end_time_str) >= 0:
+        end_time = datetime.fromisoformat(end_time_str).replace(tzinfo=timezone.utc)
+    else:
+        end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+
+    # Retrieve all data from the database within the specified time frame
+    data = analytics_collection.find({
+        "time": {
+            "$gte": start_time,
+            "$lte": end_time
+        }
+    })
+
+    # Group data by obj_id and sort by time
+    object_paths = {}
+    for entry in data:
+        obj_id = entry['obj_id']
+        if obj_id not in object_paths:
+            object_paths[obj_id] = []
+        object_paths[obj_id].append({
+            "time": entry['time'],
+            "coordinates": entry['coordinates']
+        })
+
+    # Sort the paths by time for each object
+    for obj_id in object_paths:
+        object_paths[obj_id].sort(key=lambda x: x['time'])
+
+    return jsonify(object_paths)
+
+@app.route('/api/unique_objects_per_hour', methods=['GET'])
+def unique_objects_per_hour():
+    # Get the number of days specified by the user
+    days = int(request.args.get('days', 1))  # Default to 1 day if not specified
+
+    # Calculate the start and end times
+    end_time = datetime.now(timezone.utc)
+    start_time = end_time - timedelta(days=days)
+
+    # Retrieve all data from the database within the specified time frame
+    data = analytics_collection.find({
+        "time": {
+            "$gte": start_time,
+            "$lte": end_time
+        }
+    })
+
+    hourly_counts = defaultdict(set)
+    for entry in data:
+        hour = entry['time'].hour
+        obj_id = entry['obj_id']
+        hourly_counts[hour].add(obj_id)
+
+    hourly_counts = {hour: len(obj_ids) for hour, obj_ids in hourly_counts.items()}
+    return jsonify(hourly_counts)
+
 
 if __name__ == '__main__':
     video = VideoStream("http://10.43.245.35:4747/video")
