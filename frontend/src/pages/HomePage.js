@@ -3,6 +3,7 @@ import { Button, Flex } from 'antd';
 import React from 'react';
 import { Layout, Typography, Card, Progress, Row, Col, Statistic } from 'antd';
 import { LineChartOutlined, HeatMapOutlined } from '@ant-design/icons';
+import VideoFeed from "../component/VideoFeed"
 
 import BarChartCustomers from '../component/BarChartCustomers';
 const { Header, Content } = Layout;
@@ -26,7 +27,7 @@ function HomePage() {
                 <Row gutter={16}>
                     <Col span={8}>
                         <Card title="Live Feed" bordered={false}>
-                            <Text>Real-time data and updates.</Text>
+                            <VideoFeed />
                         </Card>
                     </Col>
 
