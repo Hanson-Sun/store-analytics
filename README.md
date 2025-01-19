@@ -31,7 +31,9 @@ We plan to take Shoplytics to the next level by integrating a Large Language Mod
 ## Setup
 In the backend directory:
 ```pip install requirements.txt```
+
 Run the flask server:
 ```py server.py```
+
 Run the web app:
 ```npm start```
