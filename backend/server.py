@@ -4,6 +4,7 @@ import numpy as np
 from pymongo import MongoClient
 from datetime import datetime
 import threading
+from yolo import AIVisionDetector
 
 app = Flask(__name__)
 
@@ -14,15 +15,6 @@ db = client["store_analytics"]
 analytics_collection = db["analytics"]
 
 # TODO
-class AIVisionDetector:
-    def __init__(self):
-        self.video_stream = None
-        self.detector = None
-
-
-class VideoVisualizer:
-    def __init__(self):
-        self.video_stream = None
 
 FRAME = None
 
@@ -34,6 +26,7 @@ class VideoStream:
         self._cap = cv2.VideoCapture(url)
         self._lock = threading.Lock()
         self._current_frame = None
+        self._detector = AIVisionDetector()
     
     def get_frame(self):
         global FRAME
@@ -107,6 +100,8 @@ def generate_video():
             print("frame not found")
             continue
 
+        frame = video._detector.draw_boxes(frame, video._detector.detect(frame))
+
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
 
@@ -148,5 +143,6 @@ def get_data():
 if __name__ == '__main__':
     video = VideoStream("http://10.43.245.35:4747/video")
     video.play_video()
-    app.run(debug=True)
+
+    app.run(debug=False)
 
