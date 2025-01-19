@@ -5,6 +5,8 @@ import { Layout, Typography, Card, Progress, Row, Col, Statistic } from 'antd';
 import { LineChartOutlined, HeatMapOutlined } from '@ant-design/icons';
 
 import BarChartCustomers from '../component/BarChartCustomers';
+import VideoFeed from '../component/VideoFeed';
+
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
@@ -26,7 +28,7 @@ function HomePage() {
                 <Row gutter={16}>
                     <Col span={8}>
                         <Card title="Live Feed" bordered={false}>
-                            <Text>Real-time data and updates.</Text>
+                            <VideoFeed />
                         </Card>
                     </Col>
 
