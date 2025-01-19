@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 import threading
 from yolo import AIVisionDetector
 from scipy.spatial import KDTree
+from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app)
@@ -317,13 +318,21 @@ def unique_objects_per_hour():
         }
     })
 
-    hourly_counts = defaultdict(set)
-    for entry in data:
-        hour = entry['time'].hour
-        obj_id = entry['obj_id']
-        hourly_counts[hour].add(obj_id)
+    # Initialize a dictionary for all 24 hours with default counts of 0
+    hourly_counts = {f"{hour:02d}:00": 0 for hour in range(24)}
 
-    hourly_counts = {hour: len(obj_ids) for hour, obj_ids in hourly_counts.items()}
+    # Count unique objects per hour
+    temp_counts = defaultdict(set)  # Temporarily store unique object IDs per hour
+    for entry in data:
+        entry_time = entry['time'].astimezone(timezone.utc)  # Ensure the time is in UTC
+        hour_label = entry_time.strftime("%H:00")
+        obj_id = entry['obj_id']
+        temp_counts[hour_label].add(obj_id)
+
+    # Convert unique object sets to counts
+    for hour_label, obj_ids in temp_counts.items():
+        hourly_counts[hour_label] = len(obj_ids)
+
     return jsonify(hourly_counts)
 
 
