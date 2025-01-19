@@ -45,15 +45,14 @@ function HomePage() {
     }, []);
 
     return (
-        <Layout style={{ minHeight: '100vh' }}>
-            <Header style={{ background: '#001529', padding: 0 }}>
-                <div style={{ color: 'white', textAlign: 'center', fontSize: '40px', padding: '10px' }}>
-                    STORE ANALYTICS
+        <Layout style={{ minHeight: '100vh', maxHeight: "100vh" }}>
+            <Header style={{ background: '#001529', padding: 0, margins: 10 }}>
+                <div style={{ color: 'white', textAlign: 'center', fontSize: '40px'}}>
+                Store Analytics Dashboard
                 </div>
             </Header>
 
             <Content style={{ padding: '20px' }}>
-                <Title level={2}>Store Analytics Dashboard</Title>
 
                 <Row gutter={[16, 16]}>
                     <Col span={12}>
