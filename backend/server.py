@@ -25,7 +25,7 @@ FRAME = None
 class VideoStream:
     def __init__(self, url):
         self._url = url
-        self._cap = None
+        self._cap = cv2.VideoCapture(url)
         self._lock = threading.Lock()
         self._current_frame = None
         self._is_running = False
@@ -182,16 +182,20 @@ def get_heatmap_data():
     start_time_str = request.args.get('start_time')
     end_time_str = request.args.get('end_time')
 
-    # Convert the start and end times to datetime objects
-    if start_time_str and float(start_time_str) >= 0:
-        start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
-    else:
-        start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
+    try:
+        # Convert the start and end times to datetime objects
+        if start_time_str:
+            start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))  # Handle UTC "Z"
+        else:
+            start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
 
-    if end_time_str and float(end_time_str) >= 0:
-        end_time = datetime.fromisoformat(end_time_str).replace(tzinfo=timezone.utc)
-    else:
-        end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+        if end_time_str:
+            end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))  # Handle UTC "Z"
+        else:
+            end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+
+    except ValueError as e:
+        return jsonify({"status": "error", "message": f"Invalid timestamp: {e}"}), 400
 
     # Retrieve all data from the database within the specified time range
     data = analytics_collection.find({
@@ -231,17 +235,22 @@ def count_unique_objects():
     start_time_str = request.args.get('start_time')
     end_time_str = request.args.get('end_time')
 
-    # Convert the start and end times to datetime objects
-    if start_time_str and float(start_time_str) >= 0:
-        start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
-    else:
-        start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
+    try:
+        # Convert the start and end times to datetime objects
+        if start_time_str:
+            start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))  # Handle UTC "Z"
+        else:
+            start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
 
-    if end_time_str and float(end_time_str) >= 0:
-        end_time = datetime.fromisoformat(end_time_str).replace(tzinfo=timezone.utc)
-    else:
-        end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+        if end_time_str:
+            end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))  # Handle UTC "Z"
+        else:
+            end_time = datetime.now(timezone.utc)  # Default to the latest possible time
 
+    except ValueError as e:
+        return jsonify({"status": "error", "message": f"Invalid timestamp: {e}"}), 400
+
+    # Query the database
     data = analytics_collection.find({
         "time": {
             "$gte": start_time,
@@ -249,9 +258,11 @@ def count_unique_objects():
         }
     })
 
+    # Find unique object IDs
     unique_obj_ids = set(entry['obj_id'] for entry in data)
 
     return jsonify({"result": len(unique_obj_ids)})
+
 
 @app.route('/api/get_object_paths', methods=['GET'])
 def get_object_paths():
@@ -259,16 +270,20 @@ def get_object_paths():
     start_time_str = request.args.get('start_time')
     end_time_str = request.args.get('end_time')
 
-    # Convert the start and end times to datetime objects
-    if start_time_str and float(start_time_str) >= 0:
-        start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
-    else:
-        start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
+    try:
+        # Convert the start and end times to datetime objects
+        if start_time_str:
+            start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))  # Handle UTC "Z"
+        else:
+            start_time = datetime.min.replace(tzinfo=timezone.utc)  # Default to the earliest possible time
 
-    if end_time_str and float(end_time_str) >= 0:
-        end_time = datetime.fromisoformat(end_time_str).replace(tzinfo=timezone.utc)
-    else:
-        end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+        if end_time_str:
+            end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))  # Handle UTC "Z"
+        else:
+            end_time = datetime.now(timezone.utc)  # Default to the latest possible time
+
+    except ValueError as e:
+        return jsonify({"status": "error", "message": f"Invalid timestamp: {e}"}), 400
 
     # Retrieve all data from the database within the specified time frame
     data = analytics_collection.find({
