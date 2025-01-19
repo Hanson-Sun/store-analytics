@@ -49,7 +49,7 @@ function HomePage() {
     return (
         <Layout style={{ minHeight: '100vh', maxHeight: "100vh" }}>
             <Header style={{ background: '#001529', padding: 0, margins: 10 }}>
-                <div style={{ color: 'white', textAlign: 'center', fontSize: '40px', padding: '10px' }}>
+                <div style={{ color: 'white', textAlign: 'center', fontSize: '40px'}}>
                     STORE ANALYTICS
                 </div>
             </Header>
