@@ -1,13 +1,21 @@
 import "./HomePage.css"
 import { Button, Flex } from 'antd';
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { Layout, Typography, Card, Progress, Row, Col, Statistic, Input } from 'antd';
-import { LineChartOutlined, HeatMapOutlined } from '@ant-design/icons';
 import VideoFeed from "../component/VideoFeed"
-
 import BarChartCustomers from '../component/BarChartCustomers';
+import HeatmapExample from '../component/HeatMapG';
+
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
+
+const xLabels = new Array(24).fill(0).map((_, i) => `${i}`)
+const yLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+const data = new Array(yLabels.length)
+    .fill(0)
+    .map(() =>
+        new Array(xLabels.length).fill(0).map(() => Math.floor(Math.random() * 50 + 50))
+    )
 
 function HomePage() {
 
@@ -41,8 +49,7 @@ function HomePage() {
 
                     <Col span={8}>
                         <Card title="Mean Heatmap" bordered={false}>
-                            <HeatMapOutlined style={{ fontSize: '40px', color: '#52c41a' }} />
-                            <Text>Heatmap of store activity will be displayed here.</Text>
+                            <HeatmapExample />
                         </Card>
                     </Col>
 
