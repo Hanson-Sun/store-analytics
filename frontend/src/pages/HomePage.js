@@ -35,7 +35,7 @@ function HomePage() {
                 <Row gutter={16}>
                     <Col span={8}>
                         <Card title="Live Feed" bordered={false}>
-                            {/* <VideoFeed /> */}
+                            <VideoFeed />
                         </Card>
                     </Col>
 
