@@ -146,7 +146,7 @@ def get_data():
     return jsonify({"status": "success", "result": "Data retrieved from the database."})
 
 if __name__ == '__main__':
-    video = VideoStream("http://10.43.245.35:4747/video")
+    video = VideoStream("http://128.189.133.125:4747/video")
     video.play_video()
     app.run(debug=True)
 
