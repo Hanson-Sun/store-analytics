@@ -1,56 +1,65 @@
-import React from "react";
-import { MapContainer, useMap } from "react-leaflet";
-import L from "leaflet"; // Import leaflet
-import "leaflet.heat"; // Import leaflet.heat
-import "leaflet/dist/leaflet.css";
-
-const HeatmapLayer = ({ points }) => {
-  const map = useMap();
-
-  React.useEffect(() => {
-    const heat = L.heatLayer(points, {
-      radius: 25,
-      blur: 15,
-      maxZoom: 17,
-    });
-
-    heat.addTo(map);
-
-    return () => {
-      map.removeLayer(heat);
-    };
-  }, [map, points]);
-
-  return null;
-};
+import React, { useEffect, useRef, useState } from "react";
+import heatmap from "heatmap.js"; // Import heatmap.js
+import Image from "./image.png"; 
 
 const HeatmapExample = () => {
-  // Sample data: [latitude, longitude, intensity]
-  const points = [
-    [37.7749, -122.4194, 0.8], // San Francisco
-    [34.0522, -118.2437, 0.5], // Los Angeles
-    [40.7128, -74.006, 0.7], // New York
-    [41.8781, -87.6298, 0.6], // Chicago
-  ];
+  const heatmapRef = useRef(null);
+
+  useEffect(() => {
+    // Create heatmap instance with minimal configuration
+    const heatmapInstance = heatmap.create({
+      container: heatmapRef.current, // Reference to the container div
+    });
+
+    // Generate random data for heatmap
+    const points = [];
+    let max = 0;
+    const width = 840;
+    const height = 400;
+    const len = 200;
+
+    for (let i = 0; i < len; i++) {
+      const val = Math.floor(Math.random() * 100); // Random intensity value
+      max = Math.max(max, val); // Update the maximum intensity
+      const point = {
+        x: Math.floor(Math.random() * width), // Random x coordinate
+        y: Math.floor(Math.random() * height), // Random y coordinate
+        value: val, // Random intensity value
+      };
+      points.push(point);
+    }
+
+    // Set data for the heatmap
+    const data = {
+      max: max,
+      data: points,
+    };
+
+    // Initialize the heatmap with the data
+    heatmapInstance.setData(data);
+
+    // Cleanup heatmap instance on unmount
+    return () => {
+      if (heatmapInstance && heatmapInstance._renderer) {
+        heatmapInstance._renderer.clear();
+      }
+    };
+  }, []);
 
   return (
-    <MapContainer className="map-container"
+    <div
+      ref={heatmapRef}
       style={{
-        height: "500px",
-        width: "100%",
-        backgroundColor: "#f0f0f0", // Set a blank background color
+        opacity: 1,
+        width: "840px", // Set width of heatmap container
+        height: "400px", // Set height of heatmap container
+        position: "relative",
+        backgroundColor: "#f0f0f0", // Optional background color
+        border: "1px solid #ccc", // Optional border
       }}
-      center={[0, 0]} // Centered on San Francisco
-      zoom={5}
-      zoomControl={false}
-      attributionControl={false}
-      dragging={false}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
     >
-    <HeatmapLayer points={points} />
-    </MapContainer>
+      <img src={Image} alt="Store Layout" style={{ width: "100%", height: "100%", opacity: 1, position: "absolute", top: 0, left: 0 }} />
+    </div>
   );
 };
 
