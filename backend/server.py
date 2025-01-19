@@ -25,6 +25,7 @@ FRAME = None
 class VideoStream:
     def __init__(self, url):
         self._url = url
+        self._cap = None
         self._cap = cv2.VideoCapture(url)
         self._lock = threading.Lock()
         self._current_frame = None
