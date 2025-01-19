@@ -1,7 +1,7 @@
 import "./HomePage.css"
 import { Button, Flex } from 'antd';
 import React, {useState} from 'react';
-import { Layout, Typography, Card, Progress, Row, Col, Statistic } from 'antd';
+import { Layout, Typography, Card, Progress, Row, Col, Statistic, Input } from 'antd';
 import { LineChartOutlined, HeatMapOutlined } from '@ant-design/icons';
 import VideoFeed from "../component/VideoFeed"
 
