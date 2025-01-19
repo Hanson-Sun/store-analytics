@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 ## MONGO DB SCAFFOLDING
-MONGO_URI = "mongodb://localhost:27017/" 
+MONGO_URI = "mongodb+srv://nicholaschang0930:1aCcoFMQxHdYCxoG@cluster0.f9jls.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0" 
 client = MongoClient(MONGO_URI)
 db = client["store_analytics"]
 analytics_collection = db["analytics"]
@@ -29,6 +29,7 @@ class VideoStream:
         self._lock = threading.Lock()
         self._current_frame = None
         self._detector = AIVisionDetector()
+        self._data = None
     
     def get_frame(self):
         global FRAME
@@ -43,6 +44,14 @@ class VideoStream:
                 print("Error: Could not get frame!!")
                 return None
             return frame
+        
+    def process_frame(self, frame):
+        data = self._detector.detect(frame)
+        detections = self._detector.track(frame, data[0])
+
+        frame_data, centroids, timestamp = self._detector.process_data((detections, data[1]))
+
+        return frame_data, centroids, timestamp
     
     def _play_video(self):
         while self._is_playing:
@@ -71,12 +80,6 @@ class VideoStream:
         self._cap = cv2.VideoCapture(url)
 
         print(f"URL SET TO {url}")
-
-        # if self._thread is not None:
-        #     self._thread.join()
-        
-        # self.stop_video()
-        # self.play_video()
 
     def release(self):
         self._cap.release()
@@ -110,7 +113,11 @@ def generate_video():
             print("frame not found")
             continue
 
-        frame = video._detector.draw_boxes(frame, video._detector.detect(frame))
+        frame_data, centroids, timestamp = video.process_frame(frame)
+        frame = video._detector.draw_boxes(frame, frame_data)
+
+        # if len(centroids) > 0 and datetime.now().second % 1 == 0:
+        #     insert_data(frame_data, centroids, timestamp)
 
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
@@ -139,16 +146,34 @@ def handle_data():
     elif request.method == 'GET':
         return jsonify({"result": "Send some data using POST!"})
 
+# API route to store data from MongoDB
 @app.route('/api/store_data', methods=['POST'])
 def store_data():
-    # replace with actual implemtation
-    return jsonify({"status": "success", "result": "Data stored in the database."})
+    data = request.json
+    result = analytics_collection.insert_one(data)
+    return jsonify({"status": "success", "result": f"Coordinate stored in the database {result}"})
+
+def insert_data(frame_data, centroids, timestamp):
+    data_list = []
+    for centroid, data in zip(centroids, frame_data):
+        data_list.append({
+            "timestamp": timestamp,
+            "coordinates": centroid,
+            "box": data['box'],
+            "id": data['id']
+        })
+    
+    result = analytics_collection.insert_many(data_list)
+    return result
 
 # API route to retrieve data from MongoDB
 @app.route('/api/get_data', methods=['GET'])
 def get_data():
-    # replace with actual implementation
-    return jsonify({"status": "success", "result": "Data retrieved from the database."})
+    data = analytics_collection.find({})
+    if data:
+        return jsonify(data), 200
+    else:
+        return jsonify({"message": "Not found"}), 404
 
 if __name__ == '__main__':
     video = VideoStream("http://10.43.245.35:4747/video")
